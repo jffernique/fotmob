@@ -2,12 +2,14 @@ import requests
 from bs4 import BeautifulSoup
 import re
 from re import search
-from lxml import html
+
 import time
 
-
-xx = int(input('Combien de matchs sans 2 ou 3 buts : '))
-ele=[]
+start = time.time()
+xx = int(6)
+# xx = int(input('Combien de matchs sans 2 ou 3 buts : ') or 6)
+ele = []
+# Dict league name in fotmob respect casse its very important for the search
 leagues = {'https://www.fotmob.com/leagues/223/table': 'J. League',
            'https://www.fotmob.com/leagues/268/table': 'Serie A',
            'https://www.fotmob.com/leagues/40/table': 'First Division A',
@@ -48,6 +50,7 @@ leagues = {'https://www.fotmob.com/leagues/223/table': 'J. League',
            'https://www.fotmob.com/leagues/38/table': 'Bundesliga'
 
            }
+# Dict country
 countrys = {'https://www.fotmob.com/leagues/223/table': 'Japan',
             'https://www.fotmob.com/leagues/268/table': 'Brazil',
             'https://www.fotmob.com/leagues/40/table': 'Belgium',
@@ -88,6 +91,8 @@ countrys = {'https://www.fotmob.com/leagues/223/table': 'Japan',
             'https://www.fotmob.com/leagues/38/table': 'Austria'
 
             }
+
+# list url for each leaque
 links = ['https://www.fotmob.com/leagues/223/table',
          'https://www.fotmob.com/leagues/268/table',
          'https://www.fotmob.com/leagues/40/table',
@@ -127,52 +132,37 @@ links = ['https://www.fotmob.com/leagues/223/table',
          'https://www.fotmob.com/leagues/130/table',
          'https://www.fotmob.com/leagues/38/table'
          ]
+
 for link in links:
-    lin=link+"/undefined"
-    webpage=requests.get(lin)
+    lin = link + "/undefined"
+    webpage = requests.get(lin)
     league = leagues[link]
     country = countrys[link]
-    #print(webpage.text)
 
     print("----------------------------------------------------------")
     print("Teams Of " + league + " => Country:" + country)
     print("----------------------------------------------------------")
     soup = BeautifulSoup(webpage.content, 'html.parser')
-    #print(soup)
-    ele = soup.find_all("div",{"class" : re.compile('.*emrg6e0.*')})
-    #print(len(ele))
 
-    #print (ele)
+    ele = soup.find_all("div", {"class": re.compile('.*emrg6e0.*')})
+
     for element in ele:
         eliminate = 0
         goals = []
-        a = element.find("a",href=True)
-        #print (a['href'])
-        team_fixture = ("https://www.fotmob.com"+a['href']).replace('overview','fixtures')
+        a = element.find("a", href=True)
+
+        team_fixture = ("https://www.fotmob.com" + a['href']).replace('overview', 'fixtures')
         team_fixtures = requests.get(team_fixture)
-        driver2=BeautifulSoup(team_fixtures.content,'html.parser')
-        #driver2=html.fromstring(team_fixtures.content)
-        #print (driver2.prettify())
+        driver2 = BeautifulSoup(team_fixtures.content, 'html.parser')
 
+        # league_names = driver2.find_elements_by_xpath("//span[@class='css-1pcgt64-league']")
+        # syntax selenium to bs4 
+        league_names = driver2.find_all("span", {"class": "css-1pcgt64-league"})
 
-        #league_names = driver2.find_elements_by_xpath("//span[@class='css-1pcgt64-league']")
-        league_names = driver2.find_all("span",{"class" : "css-1pcgt64-league"})
-        #print ("-----------------")
-        #print(league_names)
-        #league_names = driver2.xpath('//span[@class="css-1pcgt64-league"]/text()')
-        #cards = driver2.find_all({'a' : '''ispastmatch="1"'''})
-        #cards = driver2.find_all('div',{'a' : 'ispastmatch="1"'})
-        cards =driver2.find_all('a',{'class': 'css-3mgmk0-FixtureTileDetailedCSS e1ltb3e20'})
-
-
-
-        #print("-----------------")
-        #print(cards)
-        #cards = driver2.xpath('[@a="ispastmatch="1""]')
+        cards = driver2.find_all('a', {'class': 'css-3mgmk0-FixtureTileDetailedCSS e1ltb3e20'})
 
         matches = []
         for card in cards:
-           # print (card)
             matches.append(card.find_all("span")[4])
         x = 0
         for match in matches:
@@ -194,4 +184,6 @@ for link in links:
                 print(goals[-xx:])
             else:
                 print(goals)
-print("Scrap finish.....")
+
+interval = time.time() - start
+print("Scrap finish..... en " + str(interval) + " secondes")
